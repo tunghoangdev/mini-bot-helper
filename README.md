@@ -32,6 +32,10 @@ The container runs one sync and exits with status 0 on success. A ready-to-run G
 
 Each Markdown article remains one source document. Gemini File Search performs server-side whitespace chunking with a 400-token maximum and 40-token overlap, while the job logs an estimated chunk count. Headings and the `Article URL:` line remain in source text, relative links are preserved, and navigation/ads/scripts are removed. Updated articles delete the previous Gemini document and upload the replacement; unchanged articles are skipped. File Search is the practical Gemini knowledge-base equivalent; it is not a self-managed vector database, and Google’s current API/plan pricing and limits still apply.
 
-## Evidence to add before submission
+## Evidence
+
+- [AI Studio grounded answer](evidence/ai-studio-grounded-answer.png)
+- [Initial upload](evidence/daily-job-initial-upload.png)
+- [No-change daily run](evidence/daily-job-no-change.png)
 
 Add a real screenshot of `python assistant.py "How do I add a YouTube video?"` showing cited `Article URL:` lines and link the GitHub Actions run or `optisigns-sync-last-run` artifact here after deployment. Do not invent either artifact. You still need to create the local Google AI Studio key, set repository secrets, verify the File Search Store, and push/enable the daily workflow yourself.
