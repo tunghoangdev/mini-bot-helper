@@ -1,0 +1,57 @@
+name: OptiSigns support sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2 * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore delta state
+        uses: actions/cache/restore@v4
+        with:
+          path: data/state.json
+          key: optisigns-state-${{ github.run_id }}
+          restore-keys: optisigns-state-
+
+      - name: Build one-shot image
+        run: docker build -t optisigns-sync .
+
+      - name: Run scrape and delta upload
+        run: |
+          set -o pipefail
+          mkdir -p data
+          docker run --rm \
+            -e GEMINI_API_KEY \
+            -e GEMINI_FILE_SEARCH_STORE \
+            -v "${{ github.workspace }}/data:/app/data" \
+            optisigns-sync 2>&1 | tee data/last-run.log
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_FILE_SEARCH_STORE: ${{ secrets.GEMINI_FILE_SEARCH_STORE }}
+
+      - name: Persist delta state for the next run
+        if: always() && hashFiles('data/state.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/state.json
+          key: optisigns-state-${{ github.run_id }}
+
+      - name: Upload last-run artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: optisigns-sync-last-run
+          path: |
+            data/last-run.log
+            data/last-run.json
+            data/state.json
+          if-no-files-found: ignore
+          retention-days: 90
